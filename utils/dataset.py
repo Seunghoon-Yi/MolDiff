@@ -5,9 +5,11 @@ import torch
 import numpy as np
 import pandas as pd
 import lmdb
+import torch_geometric as pyg
 from rdkit import Chem
 from tqdm import tqdm
 
+from torch_geometric.datasets import QM9
 from torch.utils.data import Subset, Dataset
 from .parser import parse_conf_list
 from .data import Drug3DData, torchify_dict
@@ -18,6 +20,8 @@ def get_dataset(config, *args, **kwargs):
     root = config.root
     if name == 'drug3d':
         dataset = Drug3DDataset(root, config.path_dict, *args, **kwargs)
+    elif name == 'qm9':
+        dataset = QM9(root, *args, **kwargs)
     else:
         raise NotImplementedError('Unknown dataset: %s' % name)
     
