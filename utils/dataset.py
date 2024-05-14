@@ -26,14 +26,28 @@ def get_dataset(config, *args, **kwargs):
         raise NotImplementedError('Unknown dataset: %s' % name)
     
     if 'split' in config:
-        split_by_molid = torch.load(os.path.join(root, config.split))
-        split = {
-            k: [dataset.molid2idx[mol_id] for mol_id in mol_id_list if mol_id in dataset.molid2idx]
-            for k, mol_id_list in split_by_molid.items()
-        }
-        subsets = {k:Subset(dataset, indices=v) for k, v in split.items()}
-        print('Num of samples:', *{(k, len(v)) for k,v in split.items()})
-        return dataset, subsets
+        if name == 'drug3d':
+            split_by_molid = torch.load(os.path.join(root, config.split))
+            split = {
+                k: [dataset.molid2idx[mol_id] for mol_id in mol_id_list if mol_id in dataset.molid2idx]
+                for k, mol_id_list in split_by_molid.items()
+            }
+            subsets = {k:Subset(dataset, indices=v) for k, v in split.items()}
+            print('Num of samples:', *{(k, len(v)) for k,v in split.items()})
+            return dataset, subsets
+        elif name == 'qm9':
+            random_state = np.random.RandomState(seed=42)
+            perm = torch.from_numpy(random_state.permutation(np.arange(130831)))
+            perm = perm.long()
+            train_idx = perm[:110000]
+            val_idx = perm[110000:120000]
+            test_idx = perm[120000:]
+            subsets = {
+                'train': Subset(dataset, train_idx),
+                'val': Subset(dataset, val_idx),
+                'test': Subset(dataset, test_idx),
+            }
+            return dataset, subsets
     else:
         return dataset
 

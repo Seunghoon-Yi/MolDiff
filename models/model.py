@@ -127,7 +127,7 @@ class MolDiff(Module):
 
     def get_loss(self, node_type, node_pos, batch_node,
                 halfedge_type, halfedge_index, batch_halfedge,
-                num_mol
+                num_mol, directed = False,
     ):
         num_graphs = num_mol
         device = node_pos.device
@@ -139,8 +139,12 @@ class MolDiff(Module):
         pos_pert = self.pos_transition.add_noise(node_pos, time_step, batch_node)
         node_pert = self.node_transition.add_noise(node_type, time_step, batch_node)
         halfedge_pert = self.edge_transition.add_noise(halfedge_type, time_step, batch_halfedge)
-        edge_index = torch.cat([halfedge_index, halfedge_index.flip(0)], dim=1)  # undirected edges
-        batch_edge = torch.cat([batch_halfedge, batch_halfedge], dim=0)
+        if not directed:
+            edge_index = torch.cat([halfedge_index, halfedge_index.flip(0)], dim=1)  # undirected edges
+            batch_edge = torch.cat([batch_halfedge, batch_halfedge], dim=0)
+        else:
+            edge_index = halfedge_index
+            batch_edge = batch_halfedge
         if self.categorical_space == 'discrete':
             h_node_pert, log_node_t, log_node_0 = node_pert
             h_halfedge_pert, log_halfedge_t, log_halfedge_0 = halfedge_pert
